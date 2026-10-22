@@ -1,15 +1,251 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10171f"><meta name="description" content="Desenhe plantas e experimente automação visual para offshore e comércio, direto no navegador."><title>PlantForge Studio — brunnodev</title><link rel="icon" href="./docs/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="./src/style.css"></head>
-<body>
-<header class="topbar"><a class="brand" href="./"><span class="brandmark">P<span>F</span></span><div>PlantForge <strong>STUDIO</strong><small>VISUAL ENGINEERING WORKSPACE</small></div></a><div class="project"><input id="projectName" aria-label="Nome do projeto" maxlength="160"><span id="saveState">Salvo neste navegador</span></div><button id="help">Guia rápido</button><a class="credit" href="https://brunnodev.store" target="_blank" rel="noopener">by brunnodev ↗</a></header>
-<main>
-<aside class="library"><div class="section-label">01 / BIBLIOTECA</div><h1>Ideias viram<br><em>plantas.</em></h1><p>Escolha um componente e clique na área de projeto.</p><label class="search"><span>⌕</span><input id="search" placeholder="Buscar componente" aria-label="Buscar componente"></label><div id="catalog"></div><div class="templates"><div class="section-label">PONTOS DE PARTIDA</div><button data-template="offshore">Plataforma offshore <span>↗</span></button><button data-template="retail">Mercado autônomo <span>↗</span></button><button id="blank">Projeto em branco <span>＋</span></button></div></aside>
-<section class="workspace"><div class="workspace-heading"><div><span class="eyebrow">PROJETO CONCEITUAL / 2D</span><h2 id="sceneTitle">Área de projeto</h2></div><span class="version">LOCAL FIRST <i></i></span></div><div class="toolbar"><div><button id="selectTool" class="active" title="Selecionar (V)">↖ Selecionar</button><button id="connectTool">⌁ Conectar</button><button id="undo" title="Desfazer (Ctrl+Z)">↶</button><button id="redo" title="Refazer (Ctrl+Shift+Z)">↷</button><button id="fit">Enquadrar</button></div><div><button id="zoomOut" aria-label="Diminuir zoom">−</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="Aumentar zoom">＋</button><button id="run" class="primary">▶ Simular</button></div></div>
-<div class="canvas-wrap"><svg id="canvas" viewBox="0 0 1000 700" role="img" aria-label="Planta interativa. Use a lista de componentes para seleção por teclado."><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#24313d" stroke-width=".6"/></pattern><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3z" fill="#48cbb6"/></marker></defs><rect width="2000" height="1400" fill="#111b25"/><rect width="2000" height="1400" fill="url(#grid)"/><g id="drawing"></g></svg><span class="canvas-note">GRID 0,25 m <span>•</span> <span id="toolHint">Selecione para editar · arraste para mover</span></span><div class="compass">N<br>↑</div></div>
-<div class="bottom-panel"><div class="panel-heading"><h3>Monitor de cenário</h3><span id="simStatus">SIMULAÇÃO PAUSADA</span></div><div class="metrics"><div><small>Componentes</small><strong id="itemCount">0</strong></div><div><small>Área das zonas</small><strong id="areaCount">0 <span>m²</span></strong></div><div><small>Regras visuais</small><strong id="ruleCount">0</strong></div><div><small>Ativos no cenário</small><strong id="activeCount">—</strong></div></div><div id="events" aria-live="polite">Altere os sensores e inicie a simulação para testar suas regras.</div></div>
-</section>
-<aside class="inspector"><div class="section-label">02 / PROPRIEDADES</div><div id="inspector"></div><details open><summary>Regras sem código <span id="rulesBadge">0</span></summary><p>Quando um valor atende à condição, uma ação é aplicada.</p><form id="ruleForm"><label>Quando<select id="ruleSource" required aria-label="Origem da regra"></select></label><div class="row"><select id="ruleOperator" aria-label="Operador"><option value=">">maior que</option><option value="<">menor que</option><option value="==">igual a</option></select><input id="threshold" type="number" value="30" required step="any" aria-label="Limite"></div><label>Então<select id="ruleTarget" required aria-label="Destino da regra"></select></label><select id="ruleAction" aria-label="Ação"><option value="on">Ligar / abrir</option><option value="off">Desligar / fechar</option></select><button class="wide" type="submit">＋ Adicionar regra</button></form><div id="rules"></div></details><details><summary>Componentes na planta</summary><div id="itemList"></div></details><details open><summary>Arquivos e exportação</summary><div class="file-grid"><button id="exportJson">Salvar JSON</button><button id="importJson">Abrir JSON</button><button id="exportSvg">Exportar SVG</button><button id="print">Imprimir / PDF</button></div><input id="file" type="file" accept=".json,application/json" hidden></details><div class="scope">Ambiente de estudo e prototipagem. Medidas e regras simplificadas, sem conexão com equipamentos reais.</div></aside>
-</main><div id="toast" role="status"></div>
-<dialog id="guide"><button id="closeHelp" class="close" aria-label="Fechar guia">×</button><span class="eyebrow">BEM-VINDO AO PLANTFORGE</span><h2>Do espaço à simulação.</h2><ol><li>Selecione um modelo pronto ou inicie um projeto em branco.</li><li>Escolha um componente na biblioteca e clique na planta para inserir.</li><li>Arraste para mover. Edite dimensões, posição e rotação no painel lateral.</li><li>Em Conectar, clique na origem e depois no destino.</li><li>Crie regras, ajuste o valor dos sensores e clique em Simular.</li><li>Salve JSON para continuar depois, SVG para usar em outros editores ou imprima em PDF.</li></ol><p>1 unidade de grade = 0,25 m. Conexões são esquemáticas. O motor avalia valores manuais; não calcula hidráulica ou circuitos. Regras conflitantes priorizam desligamento. Cada execução parte do estado base do componente.</p><p>Atalhos: V selecionar, Esc cancelar, Delete excluir, Ctrl+Z desfazer, Ctrl+Shift+Z refazer. Para usar sem arrastar, selecione um item na lista e edite X/Y.</p></dialog>
-<script type="module" src="./src/app.js"></script></body></html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#10171f" />
+    <meta
+      name="description"
+      content="Desenhe plantas e experimente automação visual para offshore e comércio, direto no navegador."
+    />
+    <title>PlantForge Studio — brunnodev</title>
+    <link rel="icon" href="./docs/mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./"
+        ><span class="brandmark">P<span>F</span></span>
+        <div>
+          PlantForge <strong>STUDIO</strong
+          ><small>VISUAL ENGINEERING WORKSPACE</small>
+        </div></a
+      >
+      <div class="project">
+        <input
+          id="projectName"
+          aria-label="Nome do projeto"
+          maxlength="160"
+        /><span id="saveState">Salvo neste navegador</span>
+      </div>
+      <button id="help">Guia rápido</button
+      ><a
+        class="credit"
+        href="https://brunnodev.store"
+        target="_blank"
+        rel="noopener"
+        >by brunnodev ↗</a
+      >
+    </header>
+    <main>
+      <aside class="library">
+        <div class="section-label">01 / BIBLIOTECA</div>
+        <h1>Ideias viram<br /><em>plantas.</em></h1>
+        <p>Escolha um componente e clique na área de projeto.</p>
+        <label class="search"
+          ><span>⌕</span
+          ><input
+            id="search"
+            placeholder="Buscar componente"
+            aria-label="Buscar componente"
+        /></label>
+        <div id="catalog"></div>
+        <div class="templates">
+          <div class="section-label">PONTOS DE PARTIDA</div>
+          <button data-template="offshore">
+            Plataforma offshore <span>↗</span></button
+          ><button data-template="retail">
+            Mercado autônomo <span>↗</span></button
+          ><button id="blank">Projeto em branco <span>＋</span></button>
+        </div>
+      </aside>
+      <section class="workspace">
+        <div class="workspace-heading">
+          <div>
+            <span class="eyebrow">PROJETO CONCEITUAL / 2D</span>
+            <h2 id="sceneTitle">Área de projeto</h2>
+          </div>
+          <span class="version">LOCAL FIRST <i></i></span>
+        </div>
+        <div class="toolbar">
+          <div>
+            <button id="selectTool" class="active" title="Selecionar (V)">
+              ↖ Selecionar</button
+            ><button id="connectTool">⌁ Conectar</button
+            ><button id="undo" title="Desfazer (Ctrl+Z)">↶</button
+            ><button id="redo" title="Refazer (Ctrl+Shift+Z)">↷</button
+            ><button id="fit">Enquadrar</button>
+          </div>
+          <div>
+            <button id="zoomOut" aria-label="Diminuir zoom">−</button
+            ><span id="zoomLabel">100%</span
+            ><button id="zoomIn" aria-label="Aumentar zoom">＋</button
+            ><button id="run" class="primary">▶ Simular</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <svg
+            id="canvas"
+            viewBox="0 0 1000 700"
+            role="img"
+            aria-label="Planta interativa. Use a lista de componentes para seleção por teclado."
+          >
+            <defs>
+              <pattern
+                id="grid"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 20 0 L 0 0 0 20"
+                  fill="none"
+                  stroke="#24313d"
+                  stroke-width=".6"
+                />
+              </pattern>
+              <marker
+                id="arrow"
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L0,6 L8,3z" fill="#48cbb6" />
+              </marker>
+            </defs>
+            <rect width="2000" height="1400" fill="#111b25" />
+            <rect width="2000" height="1400" fill="url(#grid)" />
+            <g id="drawing"></g></svg
+          ><span class="canvas-note"
+            >GRID 0,25 m <span>•</span>
+            <span id="toolHint"
+              >Selecione para editar · arraste para mover</span
+            ></span
+          >
+          <div class="compass">N<br />↑</div>
+        </div>
+        <div class="bottom-panel">
+          <div class="panel-heading">
+            <h3>Monitor de cenário</h3>
+            <span id="simStatus">SIMULAÇÃO PAUSADA</span>
+          </div>
+          <div class="metrics">
+            <div>
+              <small>Componentes</small><strong id="itemCount">0</strong>
+            </div>
+            <div>
+              <small>Área das zonas</small
+              ><strong id="areaCount">0 <span>m²</span></strong>
+            </div>
+            <div>
+              <small>Regras visuais</small><strong id="ruleCount">0</strong>
+            </div>
+            <div>
+              <small>Ativos no cenário</small
+              ><strong id="activeCount">—</strong>
+            </div>
+          </div>
+          <div id="events" aria-live="polite">
+            Altere os sensores e inicie a simulação para testar suas regras.
+          </div>
+        </div>
+      </section>
+      <aside class="inspector">
+        <div class="section-label">02 / PROPRIEDADES</div>
+        <div id="inspector"></div>
+        <details open>
+          <summary>Regras sem código <span id="rulesBadge">0</span></summary>
+          <p>Quando um valor atende à condição, uma ação é aplicada.</p>
+          <form id="ruleForm">
+            <label
+              >Quando<select
+                id="ruleSource"
+                required
+                aria-label="Origem da regra"
+              ></select
+            ></label>
+            <div class="row">
+              <select id="ruleOperator" aria-label="Operador">
+                <option value=">">maior que</option>
+                <option value="<">menor que</option>
+                <option value="==">igual a</option></select
+              ><input
+                id="threshold"
+                type="number"
+                value="30"
+                required
+                step="any"
+                aria-label="Limite"
+              />
+            </div>
+            <label
+              >Então<select
+                id="ruleTarget"
+                required
+                aria-label="Destino da regra"
+              ></select></label
+            ><select id="ruleAction" aria-label="Ação">
+              <option value="on">Ligar / abrir</option>
+              <option value="off">Desligar / fechar</option></select
+            ><button class="wide" type="submit">＋ Adicionar regra</button>
+          </form>
+          <div id="rules"></div>
+        </details>
+        <details>
+          <summary>Componentes na planta</summary>
+          <div id="itemList"></div>
+        </details>
+        <details open>
+          <summary>Arquivos e exportação</summary>
+          <div class="file-grid">
+            <button id="exportJson">Salvar JSON</button
+            ><button id="importJson">Abrir JSON</button
+            ><button id="exportSvg">Exportar SVG</button
+            ><button id="print">Imprimir / PDF</button>
+          </div>
+          <input id="file" type="file" accept=".json,application/json" hidden />
+        </details>
+        <div class="scope">
+          Ambiente de estudo e prototipagem. Medidas e regras simplificadas, sem
+          conexão com equipamentos reais.
+        </div>
+      </aside>
+    </main>
+    <div id="toast" role="status"></div>
+    <dialog id="guide">
+      <button id="closeHelp" class="close" aria-label="Fechar guia">×</button
+      ><span class="eyebrow">BEM-VINDO AO PLANTFORGE</span>
+      <h2>Do espaço à simulação.</h2>
+      <ol>
+        <li>Selecione um modelo pronto ou inicie um projeto em branco.</li>
+        <li>
+          Escolha um componente na biblioteca e clique na planta para inserir.
+        </li>
+        <li>
+          Arraste para mover. Edite dimensões, posição e rotação no painel
+          lateral.
+        </li>
+        <li>Em Conectar, clique na origem e depois no destino.</li>
+        <li>Crie regras, ajuste o valor dos sensores e clique em Simular.</li>
+        <li>
+          Salve JSON para continuar depois, SVG para usar em outros editores ou
+          imprima em PDF.
+        </li>
+      </ol>
+      <p>
+        1 unidade de grade = 0,25 m. Conexões são esquemáticas. O motor avalia
+        valores manuais; não calcula hidráulica ou circuitos. Regras
+        conflitantes priorizam desligamento. Cada execução parte do estado base
+        do componente.
+      </p>
+      <p>
+        Atalhos: V selecionar, Esc cancelar, Delete excluir, Ctrl+Z desfazer,
+        Ctrl+Shift+Z refazer. Para usar sem arrastar, selecione um item na lista
+        e edite X/Y.
+      </p>
+    </dialog>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

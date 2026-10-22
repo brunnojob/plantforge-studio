@@ -1,13 +1,102 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import {template,validateProject,removeItem,History} from '../src/model.js';
-import {simulate} from '../src/simulation.js';
-test('offshore gas threshold shuts down pump and activates alarm without mutating project',()=>{const p=template();p.items.find(i=>i.type==='gas').value=45;const before=structuredClone(p);const result=simulate(p);assert.equal(result.states[p.items.find(i=>i.type==='pump').id],false);assert.equal(result.states[p.items.find(i=>i.type==='alarm').id],true);assert.equal(result.events.length,2);assert.deepEqual(p,before);});
-test('threshold boundary and recovery use base states',()=>{const p=template();const gas=p.items.find(i=>i.type==='gas');gas.value=30;assert.equal(simulate(p).events.length,0);gas.value=31;assert.equal(simulate(p).states[p.items.find(i=>i.type==='pump').id],false);gas.value=0;assert.equal(simulate(p).states[p.items.find(i=>i.type==='pump').id],true);});
-test('conflicting actions prioritize off independent of rule order',()=>{const p=template();p.items.find(i=>i.type==='gas').value=40;const r=p.rules[0];p.rules.push({...r,id:'conflict',action:'off'});assert.equal(simulate(p).states[r.target],false);assert.ok(simulate(p).events.some(e=>e.level==='conflict'));p.rules.reverse();assert.equal(simulate(p).states[r.target],false);});
-test('retail presence lights store and temperature triggers alarm',()=>{const p=template('retail');p.items.find(i=>i.type==='light').enabled=false;p.items.find(i=>i.type==='temperature').value=10;p.items.find(i=>i.type==='presence').value=1;const r=simulate(p);assert.equal(r.events.length,2);assert.equal(r.states[p.items.find(i=>i.type==='light').id],true);});
-test('disabled sensors do not trigger rules',()=>{const p=template();const gas=p.items.find(i=>i.type==='gas');gas.value=100;gas.enabled=false;assert.equal(simulate(p).events.length,0);});
-test('deleting component removes dangling connections and rules',()=>{const p=template();const id=p.items.find(i=>i.type==='pump').id;removeItem(p,id);assert.ok(p.connections.every(c=>c.from!==id&&c.to!==id));assert.ok(p.rules.every(r=>r.target!==id&&r.source!==id));assert.doesNotThrow(()=>validateProject(p));});
-test('import rejects malformed geometry, duplicate ids, foreign types and dangling references',()=>{for(const mutate of [p=>p.items[0].x=NaN,p=>p.items[0].w=-10,p=>p.items[0].type='script',p=>p.items[1].id=p.items[0].id,p=>p.rules[0].target='missing',p=>p.connections[0].from='missing']){const p=template();mutate(p);assert.throws(()=>validateProject(p));}});
-test('project validation clones input',()=>{const p=template();const copy=validateProject(p);copy.items[0].label='Changed';assert.notEqual(copy.items[0].label,p.items[0].label);});
-test('history supports undo, redo and clears future after a new edit',()=>{let p=template();const h=new History();h.push(p);p.name='Edited';p=h.undo(p);assert.notEqual(p.name,'Edited');p=h.redo(p);assert.equal(p.name,'Edited');p=h.undo(p);h.push(p);assert.equal(h.future.length,0);});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  template,
+  validateProject,
+  removeItem,
+  History,
+} from "../src/model.js";
+import { simulate } from "../src/simulation.js";
+test("offshore gas threshold shuts down pump and activates alarm without mutating project", () => {
+  const p = template();
+  p.items.find((i) => i.type === "gas").value = 45;
+  const before = structuredClone(p);
+  const result = simulate(p);
+  assert.equal(result.states[p.items.find((i) => i.type === "pump").id], false);
+  assert.equal(result.states[p.items.find((i) => i.type === "alarm").id], true);
+  assert.equal(result.events.length, 2);
+  assert.deepEqual(p, before);
+});
+test("threshold boundary and recovery use base states", () => {
+  const p = template();
+  const gas = p.items.find((i) => i.type === "gas");
+  gas.value = 30;
+  assert.equal(simulate(p).events.length, 0);
+  gas.value = 31;
+  assert.equal(
+    simulate(p).states[p.items.find((i) => i.type === "pump").id],
+    false,
+  );
+  gas.value = 0;
+  assert.equal(
+    simulate(p).states[p.items.find((i) => i.type === "pump").id],
+    true,
+  );
+});
+test("conflicting actions prioritize off independent of rule order", () => {
+  const p = template();
+  p.items.find((i) => i.type === "gas").value = 40;
+  const r = p.rules[0];
+  p.rules.push({ ...r, id: "conflict", action: "off" });
+  assert.equal(simulate(p).states[r.target], false);
+  assert.ok(simulate(p).events.some((e) => e.level === "conflict"));
+  p.rules.reverse();
+  assert.equal(simulate(p).states[r.target], false);
+});
+test("retail presence lights store and temperature triggers alarm", () => {
+  const p = template("retail");
+  p.items.find((i) => i.type === "light").enabled = false;
+  p.items.find((i) => i.type === "temperature").value = 10;
+  p.items.find((i) => i.type === "presence").value = 1;
+  const r = simulate(p);
+  assert.equal(r.events.length, 2);
+  assert.equal(r.states[p.items.find((i) => i.type === "light").id], true);
+});
+test("disabled sensors do not trigger rules", () => {
+  const p = template();
+  const gas = p.items.find((i) => i.type === "gas");
+  gas.value = 100;
+  gas.enabled = false;
+  assert.equal(simulate(p).events.length, 0);
+});
+test("deleting component removes dangling connections and rules", () => {
+  const p = template();
+  const id = p.items.find((i) => i.type === "pump").id;
+  removeItem(p, id);
+  assert.ok(p.connections.every((c) => c.from !== id && c.to !== id));
+  assert.ok(p.rules.every((r) => r.target !== id && r.source !== id));
+  assert.doesNotThrow(() => validateProject(p));
+});
+test("import rejects malformed geometry, duplicate ids, foreign types and dangling references", () => {
+  for (const mutate of [
+    (p) => (p.items[0].x = NaN),
+    (p) => (p.items[0].w = -10),
+    (p) => (p.items[0].type = "script"),
+    (p) => (p.items[1].id = p.items[0].id),
+    (p) => (p.rules[0].target = "missing"),
+    (p) => (p.connections[0].from = "missing"),
+  ]) {
+    const p = template();
+    mutate(p);
+    assert.throws(() => validateProject(p));
+  }
+});
+test("project validation clones input", () => {
+  const p = template();
+  const copy = validateProject(p);
+  copy.items[0].label = "Changed";
+  assert.notEqual(copy.items[0].label, p.items[0].label);
+});
+test("history supports undo, redo and clears future after a new edit", () => {
+  let p = template();
+  const h = new History();
+  h.push(p);
+  p.name = "Edited";
+  p = h.undo(p);
+  assert.notEqual(p.name, "Edited");
+  p = h.redo(p);
+  assert.equal(p.name, "Edited");
+  p = h.undo(p);
+  h.push(p);
+  assert.equal(h.future.length, 0);
+});

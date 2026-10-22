@@ -14,6 +14,8 @@ Um laboratório visual de plantas e automação conceitual para plataformas offs
 
 ---
 
+![Interface do PlantForge Studio com planta offshore e regras visuais](docs/preview.jpg)
+
 ## Da ideia ao primeiro cenário
 
 PlantForge aproxima desenho 2D e experimentação de automação em uma única interface. Monte um deck de processo, organize uma loja autônoma e observe como regras simples alteram os estados dos componentes. Inspirado na facilidade de montagem de ferramentas como Tinkercad, com foco em espaços e operações.

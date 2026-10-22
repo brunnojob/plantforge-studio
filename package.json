@@ -1,14 +1,23 @@
 {
   "name": "plantforge-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/app.js && node --check src/model.js && node --check src/simulation.js",
-    "dev": "python3 -m http.server 5173"
+    "check": "node scripts/check.mjs",
+    "dev": "node scripts/serve.mjs",
+    "vendor": "node scripts/sync-vendor.mjs",
+    "test:exports": "node scripts/verify-exports.mjs"
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "jspdf": "4.2.1",
+    "pptxgenjs": "4.0.1"
+  },
+  "overrides": {
+    "image-size": "2.0.4"
   }
 }

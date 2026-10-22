@@ -28,7 +28,9 @@
           maxlength="160"
         /><span id="saveState">Salvo neste navegador</span>
       </div>
-      <button id="help">Guia rápido</button
+      <button id="projectsButton">Meus projetos</button
+      ><button id="detailsButton">Editar projeto</button
+      ><button id="help">Guia rápido</button
       ><a
         class="credit"
         href="https://brunnodev.store"
@@ -49,14 +51,17 @@
             placeholder="Buscar componente"
             aria-label="Buscar componente"
         /></label>
+        <button id="addItemButton" class="wide add-item">
+          ＋ Adicionar e nomear item
+        </button>
         <div id="catalog"></div>
         <div class="templates">
           <div class="section-label">PONTOS DE PARTIDA</div>
-          <button data-template="offshore">
-            Plataforma offshore <span>↗</span></button
-          ><button data-template="retail">
-            Mercado autônomo <span>↗</span></button
-          ><button id="blank">Projeto em branco <span>＋</span></button>
+          <span id="databaseStatus" class="database-status"
+            >Modelos locais disponíveis</span
+          >
+          <div id="remoteTemplates"></div>
+          <button id="blank">Projeto em branco <span>＋</span></button>
         </div>
       </aside>
       <section class="workspace">
@@ -203,7 +208,9 @@
             <button id="exportJson">Salvar JSON</button
             ><button id="importJson">Abrir JSON</button
             ><button id="exportSvg">Exportar SVG</button
-            ><button id="print">Imprimir / PDF</button>
+            ><button id="exportPptx">Baixar PPTX</button
+            ><button id="exportPdf">Baixar PDF</button
+            ><button id="print">Imprimir</button>
           </div>
           <input id="file" type="file" accept=".json,application/json" hidden />
         </details>
@@ -230,8 +237,8 @@
         <li>Em Conectar, clique na origem e depois no destino.</li>
         <li>Crie regras, ajuste o valor dos sensores e clique em Simular.</li>
         <li>
-          Salve JSON para continuar depois, SVG para usar em outros editores ou
-          imprima em PDF.
+          Baixe PDF ou PPTX com planta, inventário e regras; salve JSON para
+          continuar a edição.
         </li>
       </ol>
       <p>
@@ -245,6 +252,106 @@
         Ctrl+Shift+Z refazer. Para usar sem arrastar, selecione um item na lista
         e edite X/Y.
       </p>
+    </dialog>
+    <dialog id="itemDialog">
+      <form id="itemForm">
+        <button
+          type="button"
+          class="close"
+          data-close="itemDialog"
+          aria-label="Fechar item"
+        >
+          ×</button
+        ><span class="eyebrow">NOVO COMPONENTE</span>
+        <h2>Adicionar e nomear</h2>
+        <label>Tipo<select id="newType" required></select></label
+        ><label
+          >Nome do item<input
+            id="newLabel"
+            maxlength="100"
+            required
+            placeholder="Ex.: Bomba de transferência B"
+        /></label>
+        <div class="row">
+          <label
+            >Largura (unidades)<input
+              id="newWidth"
+              type="number"
+              min="10"
+              max="1500"
+              step="1"
+              required /></label
+          ><label
+            >Altura (unidades)<input
+              id="newHeight"
+              type="number"
+              min="10"
+              max="1000"
+              step="1"
+              required
+          /></label>
+        </div>
+        <label>Cor<input id="newColor" type="color" value="#b7a6e8" /></label>
+        <p>
+          80 unidades = 1 metro. O item será inserido no centro da área visível.
+        </p>
+        <button type="submit" class="primary wide">Adicionar à planta</button>
+      </form>
+    </dialog>
+    <dialog id="projectDialog">
+      <form id="projectForm">
+        <button
+          type="button"
+          class="close"
+          data-close="projectDialog"
+          aria-label="Fechar projeto"
+        >
+          ×</button
+        ><span class="eyebrow">DADOS DO PROJETO</span>
+        <h2>Identificação e relatório</h2>
+        <label
+          >Nome do projeto<input
+            id="detailsName"
+            maxlength="160"
+            required /></label
+        ><label
+          >Autor / responsável<input
+            id="detailsAuthor"
+            maxlength="120" /></label
+        ><label
+          >Cliente / unidade<input id="detailsClient" maxlength="120" /></label
+        ><label
+          >Observações<textarea
+            id="detailsNotes"
+            rows="5"
+            maxlength="2000"
+          ></textarea>
+        </label>
+        <p>
+          Esses dados aparecem nos arquivos PDF e PPTX. O projeto permanece
+          salvo neste navegador.
+        </p>
+        <button class="wide primary" type="submit">Salvar alterações</button>
+      </form>
+    </dialog>
+    <dialog id="projectsDialog">
+      <button
+        type="button"
+        class="close"
+        data-close="projectsDialog"
+        aria-label="Fechar meus projetos"
+      >
+        ×</button
+      ><span class="eyebrow">SEU ESPAÇO LOCAL</span>
+      <h2>Meus projetos</h2>
+      <p>
+        Até 20 projetos neste navegador. Use JSON para transferir projetos entre
+        dispositivos.
+      </p>
+      <div id="projectsList"></div>
+      <button id="copyProject" class="wide">
+        Salvar cópia do projeto atual
+      </button>
     </dialog>
     <script type="module" src="./src/app.js"></script>
   </body>

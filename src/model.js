@@ -128,7 +128,80 @@ export const catalog = {
     group: "Comércio",
   },
 };
-export const uid = () => crypto.randomUUID();
+Object.assign(catalog, {
+  camera: {
+    name: "Câmera",
+    icon: "◈",
+    color: "#99c6eb",
+    w: 60,
+    h: 50,
+    group: "Comércio",
+  },
+  panel: {
+    name: "Quadro elétrico",
+    icon: "ϟ",
+    color: "#f8ca80",
+    w: 80,
+    h: 65,
+    group: "Elétrica",
+  },
+  battery: {
+    name: "Bateria / UPS",
+    icon: "▣",
+    color: "#a5d68c",
+    w: 85,
+    h: 60,
+    group: "Elétrica",
+  },
+  fire: {
+    name: "Combate a incêndio",
+    icon: "△",
+    color: "#ff9292",
+    w: 55,
+    h: 60,
+    group: "Segurança",
+  },
+  conveyor: {
+    name: "Esteira",
+    icon: "⇢",
+    color: "#8ebfc4",
+    w: 200,
+    h: 60,
+    group: "Comércio",
+  },
+  custom: {
+    name: "Item personalizado",
+    icon: "◇",
+    color: "#b7a6e8",
+    w: 100,
+    h: 70,
+    group: "Personalizados",
+  },
+  text: {
+    name: "Anotação",
+    icon: "T",
+    color: "#e0e8ef",
+    w: 180,
+    h: 40,
+    group: "Personalizados",
+  },
+});
+export const layers = [
+  "Estrutura",
+  "Processo",
+  "Elétrica",
+  "Automação",
+  "Comércio",
+  "Livre",
+];
+export const uid = () => {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
 export const snap = (value) => Math.round(value / 10) * 10;
 export function component(type, x, y, label) {
   const spec = catalog[type];
@@ -143,6 +216,10 @@ export function component(type, x, y, label) {
     label: label || spec.name,
     value: 0,
     enabled: true,
+    color: spec.color,
+    notes: "",
+    layer: "Livre",
+    locked: false,
   };
 }
 export function template(kind = "offshore") {
@@ -282,7 +359,38 @@ export function validateProject(data) {
       typeof rule.id !== "string"
     )
       throw new Error("Regra inválida.");
-  return structuredClone(data);
+  for (const [key, max] of [
+    ["author", 120],
+    ["client", 120],
+    ["notes", 2000],
+  ]) {
+    if (
+      data[key] !== undefined &&
+      (typeof data[key] !== "string" || data[key].length > max)
+    )
+      throw new Error("Dados do projeto inválidos.");
+  }
+  for (const item of data.items) {
+    if (
+      (item.color !== undefined && !/^#[0-9a-f]{6}$/i.test(item.color)) ||
+      (item.notes !== undefined &&
+        (typeof item.notes !== "string" || item.notes.length > 300)) ||
+      (item.layer !== undefined && !layers.includes(item.layer)) ||
+      (item.locked !== undefined && typeof item.locked !== "boolean")
+    )
+      throw new Error("Propriedades adicionais inválidas.");
+  }
+  const copy = structuredClone(data);
+  copy.author ??= "";
+  copy.client ??= "";
+  copy.notes ??= "";
+  for (const item of copy.items) {
+    item.color ??= catalog[item.type].color;
+    item.notes ??= "";
+    item.layer ??= "Livre";
+    item.locked ??= false;
+  }
+  return copy;
 }
 export function removeItem(project, id) {
   project.items = project.items.filter((i) => i.id !== id);

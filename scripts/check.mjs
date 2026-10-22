@@ -1,0 +1,8 @@
+import { readdir } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+for (const dir of ["src", "scripts"])
+  for (const file of await readdir(dir))
+    if (/\.m?js$/.test(file))
+      execFileSync(process.execPath, ["--check", `${dir}/${file}`], {
+        stdio: "inherit",
+      });

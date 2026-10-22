@@ -7,8 +7,12 @@ import {
   History,
   uid,
   snap,
+  layers,
 } from "./model.js";
 import { simulate } from "./simulation.js";
+import { ProjectStore } from "./storage.js";
+import { builtInTemplates, fetchTemplates } from "./templates.js";
+import { exportReport, filename, bounds } from "./exports.js";
 const $ = (id) => document.getElementById(id);
 const escape = (value) =>
   String(value).replace(
@@ -26,12 +30,16 @@ let project = template(),
   zoom = 1,
   drag = null;
 const history = new History();
+let workspace;
+let availableTemplates = builtInTemplates;
 try {
-  const saved = localStorage.getItem("plantforge.v1");
-  if (saved) project = validateProject(JSON.parse(saved));
+  workspace = new ProjectStore(localStorage);
+  project = workspace.active() || validateProject(project);
+  if (!workspace.active()) workspace.create(project);
 } catch {
+  project = validateProject(project);
   toast(
-    "Não foi possível restaurar o projeto. Use Abrir JSON para recuperar um backup.",
+    "Não foi possível abrir o salvamento local. Exporte JSON para manter um backup.",
   );
 }
 function toast(message) {
@@ -42,7 +50,8 @@ function toast(message) {
 }
 function save() {
   try {
-    localStorage.setItem("plantforge.v1", JSON.stringify(project));
+    if (!workspace) throw new Error("Armazenamento indisponível.");
+    workspace.save(project);
     $("saveState").textContent = "Salvo neste navegador";
   } catch {
     $("saveState").textContent = "Falha ao salvar · exporte JSON";
@@ -97,7 +106,7 @@ function draw() {
     })
     .join("");
   const nodeMarkup = (i) => {
-    const s = catalog[i.type],
+    const s = { ...catalog[i.type], color: i.color || catalog[i.type].color },
       active = result ? result.states[i.id] : i.enabled,
       zone = i.type === "zone";
     return `<g data-id="${escape(i.id)}" transform="translate(${i.x} ${i.y}) rotate(${i.rotation} ${i.w / 2} ${i.h / 2})" class="node ${selected === i.id ? "selected" : ""}" style="--node-color:${s.color}"><title>${escape(i.label)}</title><rect width="${i.w}" height="${i.h}" rx="${zone ? 3 : 8}" fill="${zone ? "#23384b22" : "#172732"}" stroke="${selected === i.id ? "#e0fff8" : s.color}" stroke-width="${selected === i.id ? 2.5 : 1.4}" ${zone ? 'stroke-dasharray="8 5"' : ""}/>${!zone && i.type !== "wall" && i.type !== "door" ? `<text x="${i.w / 2}" y="${i.h / 2 + 7}" text-anchor="middle" fill="${s.color}" font-size="26">${s.icon}</text>` : ""}<text x="${zone ? 12 : i.w / 2}" y="${zone ? 24 : i.h + 18}" text-anchor="${zone ? "start" : "middle"}" fill="${zone ? "#7f9aaf" : "#c8d7e3"}" font-size="${zone ? 12 : 11}" font-family="monospace">${escape(i.label)}</text>${!zone && i.type !== "wall" ? `<circle cx="${i.w - 7}" cy="7" r="3" fill="${active ? "#5de2bc" : "#697481"}"/>` : ""}${running && ["gas", "temperature", "presence"].includes(i.type) ? `<text x="${i.w / 2}" y="${i.h + 32}" text-anchor="middle" fill="#5de2bc" font-size="11">${i.value}</text>` : ""}</g>`;
@@ -138,7 +147,7 @@ function draw() {
 function renderInspector() {
   const i = project.items.find((i) => i.id === selected);
   $("inspector").innerHTML = i
-    ? `<div class="selected-heading"><span style="color:${catalog[i.type].color}">${catalog[i.type].icon}</span><div><small>${catalog[i.type].group}</small><h2>${catalog[i.type].name}</h2></div></div><label>Identificação<input data-prop="label" value="${escape(i.label)}" maxlength="100"></label><div class="row"><label>X<input data-prop="x" type="number" value="${i.x}" min="0" max="2000" step="10"></label><label>Y<input data-prop="y" type="number" value="${i.y}" min="0" max="1400" step="10"></label></div><div class="row"><label>Largura<input data-prop="w" type="number" value="${i.w}" min="10" max="1500" step="10"></label><label>Altura<input data-prop="h" type="number" value="${i.h}" min="10" max="1000" step="10"></label></div><div class="row"><label>Rotação °<input data-prop="rotation" type="number" value="${i.rotation}" min="-360" max="360" step="15"></label><label>Valor do sensor<input data-prop="value" type="number" value="${i.value}" min="-100000" max="100000" step="any"></label></div><label class="checkbox"><input data-prop="enabled" type="checkbox" ${i.enabled ? "checked" : ""}> Estado base ligado / aberto</label><div class="row"><button id="duplicate">Duplicar</button><button id="delete" class="danger">Excluir</button></div><small class="muted">80 unidades = 1 m · área = soma das zonas</small>`
+    ? `<div class="selected-heading"><span style="color:${catalog[i.type].color}">${catalog[i.type].icon}</span><div><small>${catalog[i.type].group}</small><h2>${catalog[i.type].name}</h2></div></div><label>Nome do item<input data-prop="label" value="${escape(i.label)}" maxlength="100"></label><div class="row"><label>X<input data-prop="x" type="number" value="${i.x}" min="0" max="2000" step="10"></label><label>Y<input data-prop="y" type="number" value="${i.y}" min="0" max="1400" step="10"></label></div><div class="row"><label>Largura<input data-prop="w" type="number" value="${i.w}" min="10" max="1500" step="10"></label><label>Altura<input data-prop="h" type="number" value="${i.h}" min="10" max="1000" step="10"></label></div><div class="row"><label>Rotação °<input data-prop="rotation" type="number" value="${i.rotation}" min="-360" max="360" step="15"></label><label>Valor do sensor<input data-prop="value" type="number" value="${i.value}" min="-100000" max="100000" step="any"></label></div><label class="checkbox"><input data-prop="enabled" type="checkbox" ${i.enabled ? "checked" : ""}> Estado base ligado / aberto</label><div class="row"><button id="duplicate">Duplicar</button><button id="delete" class="danger">Excluir</button></div><div class="row"><label>Cor<input data-prop="color" type="color" value="${i.color || catalog[i.type].color}"></label><label>Camada<select data-prop="layer">${layers.map((layer) => `<option ${i.layer === layer ? "selected" : ""}>${layer}</option>`).join("")}</select></label></div><label>Observação<textarea data-prop="notes" maxlength="300" rows="3">${escape(i.notes || "")}</textarea></label><label class="checkbox"><input data-prop="locked" type="checkbox" ${i.locked ? "checked" : ""}> Bloquear movimentação</label><small class="muted">80 unidades = 1 m · área = soma das zonas</small>`
     : '<div class="empty"><span>↖</span><h2>Seu próximo detalhe.</h2><p>Selecione um componente para ajustar posição, dimensões e estado.</p></div>';
   const source = $("ruleSource").value,
     target = $("ruleTarget").value;
@@ -194,9 +203,13 @@ $("canvas").addEventListener("pointerdown", (event) => {
   if (event.button !== 0) return;
   const id = event.target.closest("[data-id]")?.dataset.id,
     p = point(event);
-  if (catalog[tool]) {
+  if (Object.hasOwn(catalog, tool)) {
+    if (project.items.length >= 500) {
+      toast("Limite de 500 componentes.");
+      return;
+    }
     change(() => {
-      const i = component(tool, p.x, p.y);
+      const i = component(tool, p.x, p.y, uniqueName(catalog[tool].name));
       project.items.push(i);
       selected = i.id;
     });
@@ -227,6 +240,7 @@ $("canvas").addEventListener("pointerdown", (event) => {
   draw();
   if (id) {
     const i = project.items.find((i) => i.id === id);
+    if (i.locked) return;
     drag = {
       id,
       start: p,
@@ -278,12 +292,13 @@ $("inspector").addEventListener("change", (e) => {
     return;
   }
   change(() => {
-    i[key] =
-      key === "label"
-        ? e.target.value
-        : key === "enabled"
-          ? e.target.checked
-          : Number(e.target.value);
+    i[key] = ["label", "color", "notes", "layer"].includes(key)
+      ? key === "label"
+        ? e.target.value.trim() || catalog[i.type].name
+        : e.target.value
+      : ["enabled", "locked"].includes(key)
+        ? e.target.checked
+        : Number(e.target.value);
   });
 });
 $("inspector").addEventListener("click", (e) => {
@@ -294,11 +309,15 @@ $("inspector").addEventListener("click", (e) => {
     });
   if (e.target.id === "duplicate" && selected)
     change(() => {
+      if (project.items.length >= 500) {
+        toast("Limite de 500 componentes.");
+        return;
+      }
       const i = structuredClone(project.items.find((i) => i.id === selected));
       i.id = uid();
       i.x = Math.min(2000, i.x + 20);
       i.y = Math.min(1400, i.y + 20);
-      i.label += " cópia";
+      i.label = uniqueName((i.label + " cópia").slice(0, 90));
       project.items.push(i);
       selected = i.id;
     });
@@ -314,6 +333,10 @@ $("itemList").addEventListener("click", (e) => {
 $("ruleForm").onsubmit = (e) => {
   e.preventDefault();
   if (!project.items.length) return;
+  if (project.rules.length >= 1000) {
+    toast("Limite de 1.000 regras.");
+    return;
+  }
   change(() =>
     project.rules.push({
       id: uid(),
@@ -330,28 +353,35 @@ $("rules").onclick = (e) => {
   if (id)
     change(() => (project.rules = project.rules.filter((r) => r.id !== id)));
 };
-function restore(kind) {
-  if (!confirm("Substituir o projeto atual? Você poderá desfazer esta ação."))
-    return;
-  change(() => {
-    project = kind
-      ? template(kind)
-      : {
-          version: 1,
-          name: "Novo projeto",
-          items: [],
-          connections: [],
-          rules: [],
-        };
-    selected = null;
-    running = false;
-  });
+function beginProject(data) {
+  if (workspace) workspace.save(project);
+  const next = validateProject(data);
+  if (!workspace)
+    throw new Error("Armazenamento local indisponível. Faça um backup JSON.");
+  workspace.create(next);
+  project = next;
+  selected = null;
+  running = false;
+  history.past = [];
+  history.future = [];
   setTool("select");
+  render();
+  toast("Novo projeto salvo neste navegador.");
 }
-document
-  .querySelectorAll("[data-template]")
-  .forEach((b) => (b.onclick = () => restore(b.dataset.template)));
-$("blank").onclick = () => restore(null);
+$("blank").onclick = () => {
+  try {
+    beginProject({
+      version: 1,
+      name: "Novo projeto",
+      items: [],
+      connections: [],
+      rules: [],
+    });
+    $("detailsButton").click();
+  } catch (error) {
+    toast(error.message);
+  }
+};
 $("projectName").onchange = () =>
   change(
     () => (project.name = $("projectName").value.trim() || "Novo projeto"),
@@ -396,19 +426,20 @@ $("exportJson").onclick = () =>
   download(
     JSON.stringify(project, null, 2),
     "application/json",
-    "plantforge-project.json",
+    `${filename(project.name)}.json`,
   );
 $("exportSvg").onclick = () => {
   const svg = $("canvas").cloneNode(true);
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  svg.setAttribute("viewBox", "0 0 2200 1600");
+  const b = bounds(project);
+  svg.setAttribute("viewBox", `${b.x} ${b.y} ${b.w} ${b.h}`);
   svg
     .querySelectorAll(".selected")
     .forEach((n) => n.classList.remove("selected"));
   download(
     new XMLSerializer().serializeToString(svg),
     "image/svg+xml",
-    "plantforge-plan.svg",
+    `${filename(project.name)}.svg`,
   );
 };
 $("importJson").onclick = () => $("file").click();
@@ -418,11 +449,7 @@ $("file").onchange = async (e) => {
   try {
     if (file.size > 2000000) throw new Error("Arquivo maior que 2 MB.");
     const data = validateProject(JSON.parse(await file.text()));
-    change(() => {
-      project = data;
-      selected = null;
-      running = false;
-    });
+    beginProject(data);
     toast("Projeto importado.");
   } catch (error) {
     toast(error.message);
@@ -434,7 +461,11 @@ $("print").onclick = () => window.print();
 $("help").onclick = () => $("guide").showModal();
 $("closeHelp").onclick = () => $("guide").close();
 window.addEventListener("keydown", (e) => {
-  if (e.target.closest("input,select,textarea") || $("guide").open) return;
+  if (
+    e.target.closest("input,select,textarea") ||
+    document.querySelector("dialog[open]")
+  )
+    return;
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
     e.preventDefault();
     (e.shiftKey ? $("redo") : $("undo")).click();
@@ -447,3 +478,162 @@ window.addEventListener("keydown", (e) => {
     });
 });
 render();
+
+function uniqueName(base) {
+  if (!project.items.some((i) => i.label === base)) return base;
+  let n = 2;
+  while (project.items.some((i) => i.label === `${base} ${n}`)) n++;
+  return `${base} ${n}`.slice(0, 100);
+}
+function renderTemplates() {
+  $("remoteTemplates").innerHTML = availableTemplates
+    .map(
+      (row) =>
+        `<button data-template="${escape(row.slug)}" title="${escape(row.description)}">${escape(row.title)} <span>↗</span></button>`,
+    )
+    .join("");
+}
+$("remoteTemplates").onclick = (e) => {
+  const slug = e.target.closest("[data-template]")?.dataset.template;
+  const row = availableTemplates.find((row) => row.slug === slug);
+  if (row)
+    try {
+      beginProject(structuredClone(row.project));
+    } catch (error) {
+      toast(error.message);
+    }
+};
+renderTemplates();
+fetchTemplates()
+  .then((rows) => {
+    if (!rows.length) throw new Error("Biblioteca vazia.");
+    availableTemplates = rows;
+    renderTemplates();
+    $("databaseStatus").textContent = "Modelos conectados ao Supabase";
+  })
+  .catch(() => {
+    $("databaseStatus").textContent = "Modelos locais · banco indisponível";
+  });
+$("newType").innerHTML = Object.entries(catalog)
+  .map(([type, s]) => `<option value="${type}">${s.name}</option>`)
+  .join("");
+function setItemDefaults() {
+  const s = catalog[$("newType").value];
+  $("newLabel").value = uniqueName(s.name);
+  $("newWidth").value = s.w;
+  $("newHeight").value = s.h;
+  $("newColor").value = s.color;
+}
+$("newType").onchange = setItemDefaults;
+$("addItemButton").onclick = () => {
+  setItemDefaults();
+  $("itemDialog").showModal();
+};
+$("itemForm").onsubmit = (e) => {
+  e.preventDefault();
+  if (project.items.length >= 500) {
+    toast("Limite de 500 componentes.");
+    return;
+  }
+  const view = $("canvas").viewBox.baseVal;
+  change(() => {
+    const item = component(
+      $("newType").value,
+      Math.min(2000, snap(view.x + view.width / 2)),
+      Math.min(1400, snap(view.y + view.height / 2)),
+      $("newLabel").value.trim() || catalog[$("newType").value].name,
+    );
+    item.w = Number($("newWidth").value);
+    item.h = Number($("newHeight").value);
+    item.color = $("newColor").value;
+    project.items.push(item);
+    selected = item.id;
+  });
+  setTool("select");
+  $("itemDialog").close();
+  toast("Item adicionado. Edite suas propriedades no painel.");
+};
+$("detailsButton").onclick = () => {
+  $("detailsName").value = project.name;
+  $("detailsAuthor").value = project.author || "";
+  $("detailsClient").value = project.client || "";
+  $("detailsNotes").value = project.notes || "";
+  $("projectDialog").showModal();
+};
+$("projectForm").onsubmit = (e) => {
+  e.preventDefault();
+  change(() => {
+    project.name = $("detailsName").value.trim() || "Novo projeto";
+    project.author = $("detailsAuthor").value.trim();
+    project.client = $("detailsClient").value.trim();
+    project.notes = $("detailsNotes").value.trim();
+  });
+  $("projectDialog").close();
+  toast("Dados do projeto atualizados.");
+};
+function renderProjectList() {
+  $("projectsList").innerHTML = workspace
+    ? workspace
+        .list()
+        .map(
+          (record) =>
+            `<button class="list-item" data-project="${record.id}">${escape(record.name)} ${record.id === workspace.state.active ? "· aberto" : ""}<small>${escape(new Date(record.updatedAt).toLocaleString("pt-BR"))}</small></button>`,
+        )
+        .join("")
+    : "<p>Salvamento local indisponível. Exporte JSON.</p>";
+}
+$("projectsButton").onclick = () => {
+  renderProjectList();
+  $("projectsDialog").showModal();
+};
+$("projectsList").onclick = (e) => {
+  const id = e.target.closest("[data-project]")?.dataset.project;
+  if (!id || !workspace) return;
+  try {
+    workspace.save(project);
+    project = workspace.open(id);
+    selected = null;
+    running = false;
+    history.past = [];
+    history.future = [];
+    setTool("select");
+    render();
+    $("projectsDialog").close();
+  } catch (error) {
+    toast(error.message);
+  }
+};
+$("copyProject").onclick = () => {
+  try {
+    const copy = structuredClone(project);
+    copy.name = (copy.name + " · cópia").slice(0, 160);
+    beginProject(copy);
+    renderProjectList();
+  } catch (error) {
+    toast(error.message);
+  }
+};
+document
+  .querySelectorAll("[data-close]")
+  .forEach((b) => (b.onclick = () => $(b.dataset.close).close()));
+for (const format of ["Pdf", "Pptx"])
+  $("export" + format).onclick = async () => {
+    const button = $("export" + format),
+      label = button.textContent;
+    button.disabled = true;
+    button.textContent = "Gerando…";
+    try {
+      await exportReport(
+        format.toLowerCase(),
+        structuredClone(project),
+        $("canvas"),
+        running,
+      );
+      toast("Arquivo gerado. Confira os downloads do navegador.");
+    } catch (error) {
+      toast(error.message || "Falha ao exportar. Tente novamente.");
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
+  };

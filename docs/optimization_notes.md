@@ -392,3 +392,5 @@
 
 * [2026-10-31 01:55:53] optimize applied to utilities (Ref: cf3cfc70-47)
 
+* [2026-10-31 01:55:53] clean applied to internal configs (Ref: cf3cfc70-48)
+

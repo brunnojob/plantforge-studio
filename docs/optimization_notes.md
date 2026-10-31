@@ -560,3 +560,5 @@
 
 * [2026-10-31 01:56:41] improve applied to module structure (Ref: 1aedb66a-31)
 
+* [2026-10-31 01:56:41] update applied to utilities (Ref: 1aedb66a-32)
+

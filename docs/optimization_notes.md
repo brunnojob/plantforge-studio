@@ -96,3 +96,5 @@
 
 * [2026-10-31 01:54:52] format applied to module structure (Ref: d715e26a-49)
 
+* [2026-10-31 01:54:52] format applied to inline comments (Ref: d715e26a-50)
+

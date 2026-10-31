@@ -246,3 +246,5 @@
 
 * [2026-10-31 01:55:29] improve applied to internal configs (Ref: d3436a6d-24)
 
+* [2026-10-31 01:55:29] improve applied to module structure (Ref: d3436a6d-25)
+

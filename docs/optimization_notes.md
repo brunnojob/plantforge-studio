@@ -78,3 +78,5 @@
 
 * [2026-10-31 01:54:50] optimize applied to module structure (Ref: d715e26a-40)
 
+* [2026-10-31 01:54:50] improve applied to internal configs (Ref: d715e26a-41)
+

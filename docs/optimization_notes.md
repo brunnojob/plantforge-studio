@@ -256,3 +256,5 @@
 
 * [2026-10-31 01:55:30] update applied to utilities (Ref: d3436a6d-29)
 
+* [2026-10-31 01:55:30] improve applied to inline comments (Ref: d3436a6d-30)
+

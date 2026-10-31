@@ -442,3 +442,5 @@
 
 * [2026-10-31 01:56:08] clean applied to internal configs (Ref: 61bb57f6-22)
 
+* [2026-10-31 01:56:08] clean applied to type hints (Ref: 61bb57f6-23)
+

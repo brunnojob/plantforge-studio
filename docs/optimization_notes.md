@@ -454,3 +454,5 @@
 
 * [2026-10-31 01:56:09] clean applied to utilities (Ref: 61bb57f6-28)
 
+* [2026-10-31 01:56:09] clean applied to module structure (Ref: 61bb57f6-29)
+

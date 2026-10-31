@@ -336,3 +336,5 @@
 
 * [2026-10-31 01:55:48] improve applied to utilities (Ref: cf3cfc70-19)
 
+* [2026-10-31 01:55:48] format applied to internal configs (Ref: cf3cfc70-20)
+

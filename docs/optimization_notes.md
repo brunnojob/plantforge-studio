@@ -194,3 +194,5 @@
 
 * [2026-10-31 01:55:15] format applied to module structure (Ref: a4b48feb-48)
 
+* [2026-10-31 01:55:15] clean applied to internal configs (Ref: a4b48feb-49)
+

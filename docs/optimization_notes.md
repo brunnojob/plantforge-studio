@@ -394,3 +394,5 @@
 
 * [2026-10-31 01:55:53] clean applied to internal configs (Ref: cf3cfc70-48)
 
+* [2026-10-31 01:55:53] clean applied to utilities (Ref: cf3cfc70-49)
+

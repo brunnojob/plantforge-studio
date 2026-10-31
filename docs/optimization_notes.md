@@ -522,3 +522,5 @@
 
 * [2026-10-31 01:56:34] format applied to internal configs (Ref: 1aedb66a-12)
 
+* [2026-10-31 01:56:34] format applied to utilities (Ref: 1aedb66a-13)
+

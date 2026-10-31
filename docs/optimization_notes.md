@@ -276,3 +276,5 @@
 
 * [2026-10-31 01:55:31] clean applied to type hints (Ref: d3436a6d-39)
 
+* [2026-10-31 01:55:31] clean applied to internal configs (Ref: d3436a6d-40)
+

@@ -480,3 +480,5 @@
 
 * [2026-10-31 01:56:11] clean applied to internal configs (Ref: 61bb57f6-41)
 
+* [2026-10-31 01:56:12] clean applied to inline comments (Ref: 61bb57f6-42)
+

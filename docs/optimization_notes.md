@@ -384,3 +384,5 @@
 
 * [2026-10-31 01:55:52] clean applied to utilities (Ref: cf3cfc70-43)
 
+* [2026-10-31 01:55:52] format applied to utilities (Ref: cf3cfc70-44)
+

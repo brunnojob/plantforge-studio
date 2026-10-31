@@ -348,3 +348,5 @@
 
 * [2026-10-31 01:55:49] optimize applied to internal configs (Ref: cf3cfc70-25)
 
+* [2026-10-31 01:55:49] clean applied to internal configs (Ref: cf3cfc70-26)
+

@@ -28,3 +28,5 @@
 
 * [2026-10-31 01:54:43] update applied to inline comments (Ref: d715e26a-15)
 
+* [2026-10-31 01:54:43] format applied to utilities (Ref: d715e26a-16)
+

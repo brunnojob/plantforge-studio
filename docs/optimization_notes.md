@@ -162,3 +162,5 @@
 
 * [2026-10-31 01:55:12] format applied to utilities (Ref: a4b48feb-32)
 
+* [2026-10-31 01:55:12] improve applied to module structure (Ref: a4b48feb-33)
+

@@ -150,3 +150,5 @@
 
 * [2026-10-31 01:55:11] improve applied to type hints (Ref: a4b48feb-26)
 
+* [2026-10-31 01:55:11] improve applied to inline comments (Ref: a4b48feb-27)
+

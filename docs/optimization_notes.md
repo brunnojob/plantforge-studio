@@ -338,3 +338,5 @@
 
 * [2026-10-31 01:55:48] format applied to internal configs (Ref: cf3cfc70-20)
 
+* [2026-10-31 01:55:48] clean applied to inline comments (Ref: cf3cfc70-21)
+

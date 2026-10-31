@@ -300,3 +300,5 @@
 
 * [2026-10-31 01:55:44] update applied to type hints (Ref: cf3cfc70-1)
 
+* [2026-10-31 01:55:44] clean applied to internal configs (Ref: cf3cfc70-2)
+
